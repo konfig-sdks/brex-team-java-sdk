@@ -1,0 +1,2582 @@
+openapi: 3.0.1
+info:
+  contact:
+    email: developer-access@brex.com
+    name: Admin
+    url: https://brex.com
+  description: |2
+
+    The team API lets you manage users, departments, locations, and cards.
+  title: Team API
+  version: "1.0"
+  x-konfig-has-globally-required-security: true
+servers:
+- description: Production
+  url: https://platform.brexapis.com
+- description: "Staging (Note: This is not a sandbox. It will not work with customer\
+    \ tokens.)"
+  url: https://platform.staging.brexapps.com
+security:
+- OAuth2: []
+tags:
+- description: Endpoints for card management.
+  name: Cards
+- description: Endpoints for user management.
+  name: Users
+- description: Endpoints for location management.
+  name: Locations
+- description: Endpoints for department management.
+  name: Departments
+- description: Endpoints for title management.
+  name: Titles
+- name: Companies
+paths:
+  /v2/cards:
+    get:
+      description: |2
+
+        Lists all cards by a `user_id`.
+        Only cards with `limit_type = CARD` have `spend_controls`
+      operationId: Cards_listByUserId
+      parameters:
+      - explode: true
+        in: query
+        name: user_id
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: cursor
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          format: int32
+          nullable: true
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_Card_'
+          description: listCardsByUserId 200 response
+      security:
+      - OAuth2:
+        - cards.readonly
+        - cards
+      summary: |2
+
+        List cards
+      tags:
+      - Cards
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--v2-cards
+      x-accepts: application/json
+    post:
+      description: "\nCreates a new card.\nThe `spend_controls` field is required\
+        \ when `limit_type` = `CARD`.\nThe `mailing_address` field is required for\
+        \ physical cards and is the shipping address used to send the card; it is\
+        \ not the same as the billing and mailing address used for online purchases.\n\
+        The first 2 lines of this address must be under 60 characters long. Each user\
+        \ can only have up to 10 active physical cards.\nFor Empower accounts, this\
+        \ endpoint requires budget management. If your account does not have access\
+        \ to budget management features, a 403 response status will be returned. \n\
+        If this is the case and you want to gain access to this endpoint, please contact\
+        \ Brex support.\n"
+      operationId: Cards_createNewCard
+      parameters:
+      - explode: false
+        in: header
+        name: Idempotency-Key
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCardRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+          description: createCard 200 response
+      security:
+      - OAuth2:
+        - cards
+      summary: |2
+
+        Create card
+      tags:
+      - Cards
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-post--v2-cards
+      x-content-type: application/json
+      x-accepts: application/json
+  /v2/cards/{id}:
+    get:
+      description: |2
+
+        Retrieves a card by ID. Only cards with `limit_type = CARD` have `spend_controls`
+      operationId: Cards_getById
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+          description: getCardById 200 response
+      security:
+      - OAuth2:
+        - cards
+        - cards.readonly
+      summary: |2
+
+        Get card
+      tags:
+      - Cards
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--v2-cards-id
+      x-accepts: application/json
+    put:
+      description: |2
+
+        Update an existing vendor card
+      operationId: Cards_updateCard
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: Idempotency-Key
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCardRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+          description: updateCard 200 response
+      security:
+      - OAuth2:
+        - cards
+      summary: |2
+
+        Update card
+      tags:
+      - Cards
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-put--v2-cards-id
+      x-content-type: application/json
+      x-accepts: application/json
+  /v2/cards/{id}/lock:
+    post:
+      description: |2
+
+        Locks an existing, unlocked card. And the card owner will receive a notification about it.
+      operationId: Cards_lockCard
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: Idempotency-Key
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LockCardRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+          description: lockCard 200 response
+      security:
+      - OAuth2:
+        - cards
+      summary: |2
+
+        Lock card
+      tags:
+      - Cards
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-post--v2-cards-id-lock
+      x-content-type: application/json
+      x-accepts: application/json
+  /v2/cards/{id}/pan:
+    get:
+      description: |2
+
+        Retrieves card number, CVV, and expiration date of a card by ID.
+      operationId: Cards_getCardDetails
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardNumberResponse'
+          description: getCardNumber 200 response
+      security:
+      - OAuth2:
+        - cards.pan
+      servers:
+      - description: Production
+        url: https://secure-platform.brexapis.com
+      - description: "Staging (Note: This is not a sandbox. It will not work with\
+          \ customer tokens.)"
+        url: https://secure-platform.staging.brexapps.com
+      summary: |2
+
+        Get card number
+      tags:
+      - Cards
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--v2-cards-id-pan
+      x-accepts: application/json
+  /v2/cards/{id}/secure_email:
+    post:
+      description: |2
+
+        Creates a secure email to send card number, CVV, and expiration date of a card by ID to the specified email.
+
+        This endpoint is currently gated. If you would like to request access, please reach out to
+        developer-access@brex.com
+      operationId: Cards_createSecureEmail
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: Idempotency-Key
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SecureEmailForCardDetailsRequest'
+        required: true
+      responses:
+        "200":
+          description: emailCardNumber 200 response
+      security:
+      - OAuth2:
+        - cards.pan
+      summary: "\nCreate secure email to send card number \n"
+      tags:
+      - Cards
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-post--v2-cards-id-secure_email
+      x-content-type: application/json
+      x-accepts: application/json
+  /v2/cards/{id}/terminate:
+    post:
+      description: |2
+
+        Terminates an existing card. The card owner will receive a notification about it.
+      operationId: Cards_terminateExistingCard
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: Idempotency-Key
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TerminateCardRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+          description: terminateCard 200 response
+      security:
+      - OAuth2:
+        - cards
+      summary: |2
+
+        Terminate card
+      tags:
+      - Cards
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-post--v2-cards-id-terminate
+      x-content-type: application/json
+      x-accepts: application/json
+  /v2/cards/{id}/unlock:
+    post:
+      description: |2
+
+        Unlocks an existing card.
+      operationId: Cards_unlockExistingCard
+      parameters:
+      - explode: false
+        in: header
+        name: Idempotency-Key
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+          description: unlockCard 200 response
+      security:
+      - OAuth2:
+        - cards
+      summary: |2
+
+        Unlock card
+      tags:
+      - Cards
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-post--v2-cards-id-unlock
+      x-accepts: application/json
+  /v2/company:
+    get:
+      description: |2
+
+        This endpoint returns the company associated with the OAuth2 access token.
+      operationId: Companies_getInfo
+      parameters: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyResponse'
+          description: getCompany 200 response
+      security:
+      - OAuth2:
+        - companies.readonly
+      summary: |2
+
+        Get company
+      tags:
+      - Companies
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--v2-company
+      x-accepts: application/json
+  /v2/departments:
+    get:
+      description: |2
+
+        This endpoint lists all departments.
+      operationId: Departments_listAll
+      parameters:
+      - explode: true
+        in: query
+        name: cursor
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          format: int32
+          nullable: true
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: name
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_DepartmentResponse_'
+          description: listDepartments 200 response
+      security:
+      - OAuth2:
+        - departments
+        - departments.readonly
+      summary: |2
+
+        List departments
+      tags:
+      - Departments
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--v2-departments
+      x-accepts: application/json
+    post:
+      description: |2
+
+        This endpoint creates a new department
+      operationId: Departments_addNewDepartment
+      parameters:
+      - explode: false
+        in: header
+        name: Idempotency-Key
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDepartmentRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentResponse'
+          description: createDepartment 200 response
+      security:
+      - OAuth2:
+        - departments
+      summary: |2
+
+        Create department
+      tags:
+      - Departments
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-post--v2-departments
+      x-content-type: application/json
+      x-accepts: application/json
+  /v2/departments/{id}:
+    get:
+      description: |2
+
+        This endpoint gets a department by ID.
+      operationId: Departments_getById
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentResponse'
+          description: getDepartmentById 200 response
+      security:
+      - OAuth2:
+        - departments
+        - departments.readonly
+      summary: |2
+
+        Get department
+      tags:
+      - Departments
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--v2-departments-id
+      x-accepts: application/json
+  /v2/locations:
+    get:
+      description: |2
+
+        This endpoint lists all locations.
+      operationId: Locations_getAllLocations
+      parameters:
+      - explode: true
+        in: query
+        name: cursor
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          format: int32
+          nullable: true
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: name
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_LocationResponse_'
+          description: listLocations 200 response
+      security:
+      - OAuth2:
+        - locations
+        - locations.readonly
+      summary: |2
+
+        List locations
+      tags:
+      - Locations
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--v2-locations
+      x-accepts: application/json
+    post:
+      description: |2
+
+        This endpoint creates a new location.
+      operationId: Locations_addNewLocation
+      parameters:
+      - explode: false
+        in: header
+        name: Idempotency-Key
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLocationRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationResponse'
+          description: createLocation 200 response
+      security:
+      - OAuth2:
+        - locations
+      summary: |2
+
+        Create location
+      tags:
+      - Locations
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-post--v2-locations
+      x-content-type: application/json
+      x-accepts: application/json
+  /v2/locations/{id}:
+    get:
+      description: |2
+
+        This endpoint gets a location by ID.
+      operationId: Locations_getLocationById
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationResponse'
+          description: getLocationById 200 response
+      security:
+      - OAuth2:
+        - locations
+        - locations.readonly
+      summary: |2
+
+        Get location
+      tags:
+      - Locations
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--v2-locations-id
+      x-accepts: application/json
+  /v2/titles:
+    get:
+      description: |2
+
+        This endpoint lists all titles.
+      operationId: Titles_getAll
+      parameters:
+      - explode: true
+        in: query
+        name: cursor
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          format: int32
+          nullable: true
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: name
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_TitleResponse_'
+          description: listTitles 200 response
+      security:
+      - OAuth2:
+        - titles
+        - titles.readonly
+      summary: |2
+
+        List titles
+      tags:
+      - Titles
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--v2-titles
+      x-accepts: application/json
+    post:
+      description: |2
+
+        This endpoint creates a new title
+      operationId: Titles_createNewTitle
+      parameters:
+      - explode: false
+        in: header
+        name: Idempotency-Key
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTitleRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TitleResponse'
+          description: createTitle 200 response
+      security:
+      - OAuth2:
+        - titles
+      summary: |2
+
+        Create title
+      tags:
+      - Titles
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-post--v2-titles
+      x-content-type: application/json
+      x-accepts: application/json
+  /v2/titles/{id}:
+    get:
+      description: |2
+
+        This endpoint gets a title by ID.
+      operationId: Titles_getTitleById
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TitleResponse'
+          description: getTitleById 200 response
+      security:
+      - OAuth2:
+        - titles
+        - titles.readonly
+      summary: |2
+
+        Get title
+      tags:
+      - Titles
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--v2-titles-id
+      x-accepts: application/json
+  /v2/users:
+    get:
+      description: |2
+
+        This endpoint lists all users. To find a user id by email, you can filter using the `email` query parameter.
+      operationId: Users_listUsers
+      parameters:
+      - explode: true
+        in: query
+        name: cursor
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          format: int32
+          nullable: true
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: email
+        required: false
+        schema:
+          description: Currently only support filtering by a single email or a single
+            remote_display_id.
+          nullable: true
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: remote_display_id
+        required: false
+        schema:
+          description: Currently only support filtering by a single email or a single
+            remote_display_id.
+          nullable: true
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: "expand[]"
+        required: false
+        schema:
+          description: |2
+
+            Expandable fields that can be included in the response by passing in a query parameter e.g. ?expand[]=limit
+          items:
+            type: string
+          nullable: true
+          type: array
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_UserResponse_'
+          description: listUsers 200 response
+      security:
+      - OAuth2:
+        - users
+        - users.readonly
+      summary: |2
+
+        List users
+      tags:
+      - Users
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--v2-users
+      x-accepts: application/json
+    post:
+      description: |2
+
+        This endpoint invites a new user as an employee.
+        To update user's role, check out [this article](https://support.brex.com/how-do-i-change-another-user-s-role/).
+      operationId: Users_inviteNewEmployee
+      parameters:
+      - explode: false
+        in: header
+        name: Idempotency-Key
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+          description: createUser 200 response
+      security:
+      - OAuth2:
+        - users
+      summary: |2
+
+        Invite user
+      tags:
+      - Users
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-post--v2-users
+      x-content-type: application/json
+      x-accepts: application/json
+  /v2/users/me:
+    get:
+      description: |2
+
+        This endpoint returns the user associated with the OAuth2 access token.
+      operationId: Users_getCurrentUser
+      parameters: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+          description: getMe 200 response
+      security:
+      - OAuth2:
+        - users
+        - users.readonly
+      summary: |2
+
+        Get current user
+      tags:
+      - Users
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--v2-users-me
+      x-accepts: application/json
+  /v2/users/{id}:
+    get:
+      description: |2
+
+        This endpoint gets a user by ID.
+      operationId: Users_getUserById
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+          description: getUserById 200 response
+      security:
+      - OAuth2:
+        - users
+        - users.readonly
+      summary: |2
+
+        Get user
+      tags:
+      - Users
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--v2-users-id
+      x-accepts: application/json
+    put:
+      description: |2
+
+        This endpoint updates a user. Any parameters not provided will be left unchanged.
+      operationId: Users_updateUser
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: Idempotency-Key
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+          description: updateUser 200 response
+      security:
+      - OAuth2:
+        - users
+      summary: |2
+
+        Update user
+      tags:
+      - Users
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-put--v2-users-id
+      x-content-type: application/json
+      x-accepts: application/json
+  /v2/users/{id}/limit:
+    get:
+      description: |2
+
+        This endpoint gets the monthly limit for the user including the monthly available limit.
+      operationId: Users_getMonthlyLimit
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserLimitResponse'
+          description: getUserLimit 200 response
+      security:
+      - OAuth2:
+        - users
+        - users.readonly
+      summary: |2
+
+        Get limit for the user
+      tags:
+      - Users
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--v2-users-id-limit
+      x-accepts: application/json
+    post:
+      description: "\nThis endpoint sets the monthly limit for a user. \nThe limit\
+        \ amount must be non-negative. \nTo unset the monthly limit of the user, just\
+        \ set `monthly_limit` to null.\n"
+      operationId: Users_setMonthlyLimit
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: Idempotency-Key
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetUserLimitRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserLimitResponse'
+          description: setUserLimit 200 response
+      security:
+      - OAuth2:
+        - users
+      summary: |2
+
+        Set limit for the user
+      tags:
+      - Users
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-post--v2-users-id-limit
+      x-content-type: application/json
+      x-accepts: application/json
+components:
+  schemas:
+    AccountType:
+      enum:
+      - BREX_CLASSIC
+      - BREX_EMPOWER
+      type: string
+    Address:
+      description: Company business address (must be in the US; no PO box or virtual/forwarding
+        addresses allowed).
+      example:
+        country: country
+        city: city
+        phone_number: phone_number
+        state: state
+        postal_code: postal_code
+        line2: line2
+        line1: line1
+      properties:
+        line1:
+          description: "Address line 1, no PO Box."
+          nullable: true
+          type: string
+        line2:
+          description: "Address line 2 (e.g., apartment, suite, unit, or building)."
+          nullable: true
+          type: string
+        city:
+          description: "City, district, suburb, town, or village."
+          nullable: true
+          type: string
+        state:
+          description: "For US-addressed the 2-letter State abbreviation. For international-addresses\
+            \ the county, providence, or region."
+          nullable: true
+          type: string
+        country:
+          description: Two-letter country code (ISO 3166-1 alpha-2).
+          nullable: true
+          type: string
+        postal_code:
+          description: ZIP or postal code.
+          nullable: true
+          type: string
+        phone_number:
+          description: Phone number.
+          nullable: true
+          type: string
+      type: object
+    Card:
+      description: |2
+
+        Only cards with limit_type = CARD have spend_controls
+      example:
+        owner: ""
+        mailing_address: null
+        limit_type: null
+        metadata:
+          key: metadata
+        last_four: last_four
+        card_name: card_name
+        billing_address:
+          country: country
+          city: city
+          phone_number: phone_number
+          state: state
+          postal_code: postal_code
+          line2: line2
+          line1: line1
+        id: id
+        card_type: ""
+        expiration_date:
+          month: 0
+          year: 6
+        spend_controls: null
+        status: ""
+      properties:
+        id:
+          type: string
+        owner: {}
+        status:
+          allOf:
+          - $ref: '#/components/schemas/CardStatus'
+          - nullable: true
+        last_four:
+          type: string
+        card_name:
+          type: string
+        card_type:
+          allOf:
+          - $ref: '#/components/schemas/CardType'
+          - nullable: true
+        limit_type:
+          $ref: '#/components/schemas/LimitType'
+        spend_controls:
+          $ref: '#/components/schemas/Card_spend_controls'
+        billing_address:
+          $ref: '#/components/schemas/Address'
+        mailing_address:
+          $ref: '#/components/schemas/Card_mailing_address'
+        expiration_date:
+          $ref: '#/components/schemas/CardExpiration'
+        metadata:
+          additionalProperties:
+            type: string
+          description: "\nSet of key value pairs associated with this object. Please\
+            \ do not store any personally identifiable or sensitive information here.\n\
+            Limitations: maximum of 50 keys, keys cannot exceed 40 characters, values\
+            \ cannot exceed 500 characters. \n"
+          nullable: true
+          type: object
+      required:
+      - billing_address
+      - card_name
+      - expiration_date
+      - id
+      - last_four
+      - limit_type
+      - owner
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    CardAttributePreferences:
+      properties:
+        three_domain_secure_enabled_preference:
+          allOf:
+          - $ref: '#/components/schemas/ThreeDomainSecureEnabledPreference'
+          - nullable: true
+      type: object
+    CardExpiration:
+      description: |2
+
+        Card expiration year and month. Cards expire on the last day of the expiration month.
+
+        The expiration date is in UTC for cards starting with 555671, 428803 and 485932.
+        And the expiration date is in PST for cards starting with 511572.
+      example:
+        month: 0
+        year: 6
+      properties:
+        month:
+          format: int32
+          type: integer
+        year:
+          format: int32
+          type: integer
+      required:
+      - month
+      - year
+      type: object
+    CardNumberResponse:
+      description: |2
+
+        Card number, CVV, and expiration date of a card.
+      example:
+        number: number
+        cvv: cvv
+        id: id
+        expiration_date:
+          month: 0
+          year: 6
+      properties:
+        id:
+          type: string
+        number:
+          type: string
+        cvv:
+          type: string
+        expiration_date:
+          $ref: '#/components/schemas/CardExpiration'
+      required:
+      - cvv
+      - expiration_date
+      - id
+      - number
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    CardOwner: {}
+    CardStatus:
+      enum:
+      - ACTIVE
+      - SHIPPED
+      - LOCKED
+      - TERMINATED
+      type: string
+    CardType:
+      enum:
+      - VIRTUAL
+      - PHYSICAL
+      type: string
+    ChangeCardReason:
+      description: |2
+
+        Reason for card termination.
+      enum:
+      - CARD_DAMAGED
+      - CARD_LOST
+      - CARD_NOT_RECEIVED
+      - DO_NOT_NEED_PHYSICAL_CARD
+      - DO_NOT_NEED_VIRTUAL_CARD
+      - FRAUD
+      - OTHER
+      type: string
+    CompanyResponse:
+      example:
+        mailing_address:
+          country: country
+          city: city
+          phone_number: phone_number
+          state: state
+          postal_code: postal_code
+          line2: line2
+          line1: line1
+        accountType: null
+        id: id
+        legal_name: legal_name
+      properties:
+        id:
+          type: string
+        legal_name:
+          type: string
+        mailing_address:
+          $ref: '#/components/schemas/Address'
+        accountType:
+          $ref: '#/components/schemas/AccountType'
+      required:
+      - accountType
+      - id
+      - legal_name
+      - mailing_address
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    CreateCardRequest:
+      description: |2
+
+        The `spend_controls` field is required when `limit_type` = `CARD`.
+        The `shipping_address` field is required for physical cards, and the first 2 lines of the address must be under 60 characters long.
+      example:
+        owner: ""
+        mailing_address: null
+        limit_type: null
+        metadata:
+          key: metadata
+        card_attribute_preferences: null
+        card_name: card_name
+        card_type: null
+        spend_controls: null
+      properties:
+        owner: {}
+        card_name:
+          minLength: 1
+          type: string
+        card_type:
+          $ref: '#/components/schemas/CardType'
+        limit_type:
+          $ref: '#/components/schemas/LimitType'
+        spend_controls:
+          $ref: '#/components/schemas/CreateCardRequest_spend_controls'
+        mailing_address:
+          $ref: '#/components/schemas/Card_mailing_address'
+        metadata:
+          additionalProperties:
+            type: string
+          description: "\nSet of key value pairs associated with this object. Please\
+            \ do not store any personally identifiable or sensitive information here.\n\
+            Limitations: maximum of 50 keys, keys cannot exceed 40 characters, values\
+            \ cannot exceed 500 characters. \n"
+          nullable: true
+          type: object
+        card_attribute_preferences:
+          $ref: '#/components/schemas/CreateCardRequest_card_attribute_preferences'
+      required:
+      - card_name
+      - card_type
+      - limit_type
+      - owner
+      type: object
+    CreateDepartmentRequest:
+      example:
+        name: name
+        description: description
+      properties:
+        description:
+          description: Description of the department
+          nullable: true
+          type: string
+        name:
+          description: Name of the department
+          minLength: 1
+          type: string
+      required:
+      - name
+      type: object
+    CreateLocationRequest:
+      example:
+        name: name
+        description: description
+      properties:
+        description:
+          description: Description of the location
+          nullable: true
+          type: string
+        name:
+          description: Name of the location
+          minLength: 1
+          type: string
+      required:
+      - name
+      type: object
+    CreateTitleRequest:
+      example:
+        name: name
+      properties:
+        name:
+          description: Name of the title
+          minLength: 1
+          type: string
+      required:
+      - name
+      type: object
+    CreateUserRequest:
+      example:
+        metadata:
+          key: metadata
+        manager_id: manager_id
+        department_id: department_id
+        title_id: title_id
+        last_name: last_name
+        first_name: first_name
+        email: email
+        location_id: location_id
+      properties:
+        first_name:
+          minLength: 1
+          type: string
+        last_name:
+          minLength: 1
+          type: string
+        email:
+          format: email
+          type: string
+        manager_id:
+          nullable: true
+          type: string
+        department_id:
+          nullable: true
+          type: string
+        location_id:
+          nullable: true
+          type: string
+        title_id:
+          nullable: true
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          description: "The metadata or customized attributes of the user. Maximum\
+            \ number of entries: 100"
+          nullable: true
+          type: object
+      required:
+      - email
+      - first_name
+      - last_name
+      type: object
+    DepartmentResponse:
+      example:
+        name: name
+        description: description
+        id: id
+      properties:
+        description:
+          description: Description of the department
+          nullable: true
+          type: string
+        id:
+          type: string
+        name:
+          description: Name of the department
+          type: string
+      required:
+      - id
+      - name
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    LimitType:
+      description: "\n`limit_type = CARD` for vendor cards. Vendor cards must have\
+        \ a `card_type` of `VIRTUAL` \nand do not rely on the user specific limit.\
+        \ \n\nFor corporate cards, `limit_type = USER`.\n\nLearn more about different\
+        \ card types [here](https://support.brex.com/what-are-the-different-types-of-cards-i-can-get/).\n"
+      enum:
+      - CARD
+      - USER
+      type: string
+    LocationResponse:
+      example:
+        name: name
+        description: description
+        id: id
+      properties:
+        description:
+          description: Description of the location
+          nullable: true
+          type: string
+        id:
+          type: string
+        name:
+          description: Name of the location
+          type: string
+      required:
+      - id
+      - name
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    LockCardRequest:
+      description: Parameters for locking a card.
+      example:
+        reason: null
+        description: description
+      properties:
+        description:
+          description: Description for locking a card
+          nullable: true
+          type: string
+        reason:
+          $ref: '#/components/schemas/ChangeCardReason'
+      required:
+      - reason
+      type: object
+    Money:
+      description: |2
+
+        Money fields can be signed or unsigned. Fields are signed (an unsigned value will be interpreted as positive). The amount of money will be represented in the smallest denomination
+        of the currency indicated. For example, USD 7.00 will be represented in cents with an amount of 700.
+      properties:
+        amount:
+          description: "The amount of money, in the smallest denomination of the currency\
+            \ indicated by currency. For example, when currency is USD, amount is\
+            \ in cents."
+          format: int64
+          type: integer
+        currency:
+          description: "The type of currency, in ISO 4217 format. Default to USD if\
+            \ not specified"
+          nullable: true
+          type: string
+      type: object
+    OwnerType:
+      enum:
+      - USER
+      type: string
+    Page_Card_:
+      example:
+        next_cursor: next_cursor
+        items:
+        - owner: ""
+          mailing_address: null
+          limit_type: null
+          metadata:
+            key: metadata
+          last_four: last_four
+          card_name: card_name
+          billing_address:
+            country: country
+            city: city
+            phone_number: phone_number
+            state: state
+            postal_code: postal_code
+            line2: line2
+            line1: line1
+          id: id
+          card_type: ""
+          expiration_date:
+            month: 0
+            year: 6
+          spend_controls: null
+          status: ""
+        - owner: ""
+          mailing_address: null
+          limit_type: null
+          metadata:
+            key: metadata
+          last_four: last_four
+          card_name: card_name
+          billing_address:
+            country: country
+            city: city
+            phone_number: phone_number
+            state: state
+            postal_code: postal_code
+            line2: line2
+            line1: line1
+          id: id
+          card_type: ""
+          expiration_date:
+            month: 0
+            year: 6
+          spend_controls: null
+          status: ""
+      properties:
+        next_cursor:
+          nullable: true
+          type: string
+        items:
+          items:
+            $ref: '#/components/schemas/Card'
+          type: array
+      required:
+      - items
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    Page_DepartmentResponse_:
+      example:
+        next_cursor: next_cursor
+        items:
+        - name: name
+          description: description
+          id: id
+        - name: name
+          description: description
+          id: id
+      properties:
+        next_cursor:
+          nullable: true
+          type: string
+        items:
+          items:
+            $ref: '#/components/schemas/DepartmentResponse'
+          type: array
+      required:
+      - items
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    Page_LocationResponse_:
+      example:
+        next_cursor: next_cursor
+        items:
+        - name: name
+          description: description
+          id: id
+        - name: name
+          description: description
+          id: id
+      properties:
+        next_cursor:
+          nullable: true
+          type: string
+        items:
+          items:
+            $ref: '#/components/schemas/LocationResponse'
+          type: array
+      required:
+      - items
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    Page_TitleResponse_:
+      example:
+        next_cursor: next_cursor
+        items:
+        - name: name
+          id: id
+        - name: name
+          id: id
+      properties:
+        next_cursor:
+          nullable: true
+          type: string
+        items:
+          items:
+            $ref: '#/components/schemas/TitleResponse'
+          type: array
+      required:
+      - items
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    Page_UserResponse_:
+      example:
+        next_cursor: next_cursor
+        items:
+        - metadata:
+            key: metadata
+          manager_id: manager_id
+          department_id: department_id
+          title_id: title_id
+          remote_display_id: remote_display_id
+          last_name: last_name
+          id: id
+          first_name: first_name
+          email: email
+          location_id: location_id
+          status: ""
+        - metadata:
+            key: metadata
+          manager_id: manager_id
+          department_id: department_id
+          title_id: title_id
+          remote_display_id: remote_display_id
+          last_name: last_name
+          id: id
+          first_name: first_name
+          email: email
+          location_id: location_id
+          status: ""
+      properties:
+        next_cursor:
+          nullable: true
+          type: string
+        items:
+          items:
+            $ref: '#/components/schemas/UserResponse'
+          type: array
+      required:
+      - items
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    SecureEmailForCardDetailsRequest:
+      example:
+        recipient_email: recipient_email
+        sender_name: sender_name
+        message: message
+        expiry_days: 2
+      properties:
+        recipient_email:
+          description: Email address to send card details to
+          type: string
+        sender_name:
+          description: Sender name. Shows up in the subject of the email
+          type: string
+        message:
+          description: Message to send with the card details
+          nullable: true
+          type: string
+        expiry_days:
+          description: Link expiry in number of days. Defaults to 30
+          format: int32
+          maximum: 30
+          nullable: true
+          type: integer
+      type: object
+    SetUserLimitRequest:
+      description: Request that sets the monthly user limit.
+      example:
+        monthly_limit: null
+      properties:
+        monthly_limit:
+          $ref: '#/components/schemas/SetUserLimitRequest_monthly_limit'
+      type: object
+    SpendControl:
+      properties:
+        spend_limit:
+          $ref: '#/components/schemas/Money'
+        spend_available:
+          $ref: '#/components/schemas/Money'
+        spend_duration:
+          allOf:
+          - $ref: '#/components/schemas/SpendDuration'
+          - nullable: true
+        reason:
+          nullable: true
+          type: string
+        lock_after_date:
+          description: The `lock_after_date` is in UTC.
+          format: date
+          nullable: true
+          type: string
+      required:
+      - spend_available
+      - spend_limit
+      type: object
+    SpendControlRequest:
+      description: |2
+
+        When `limit_type = CARD`, `spend_controls` must be set. When `limit type = USER`, `spend_controls` must be `null`.
+      properties:
+        spend_limit:
+          $ref: '#/components/schemas/Money'
+        spend_duration:
+          $ref: '#/components/schemas/SpendDuration'
+        reason:
+          nullable: true
+          type: string
+        lock_after_date:
+          format: date
+          nullable: true
+          type: string
+        parent_budget_id:
+          description: |2
+
+            If using the Empower platform, a new `budget` will be created for this card. You can specify a `parent_budget` that your new
+            `budget` will be nested under. If `parent_budget_id` is null, we will nest the new budget under the top-level account `budget`.
+          nullable: true
+          type: string
+      required:
+      - spend_duration
+      - spend_limit
+      type: object
+    SpendControlUpdateRequest:
+      properties:
+        spend_limit:
+          $ref: '#/components/schemas/SetUserLimitRequest_monthly_limit'
+        spend_duration:
+          allOf:
+          - $ref: '#/components/schemas/SpendDuration'
+          - nullable: true
+        reason:
+          nullable: true
+          type: string
+        lock_after_date:
+          format: date
+          nullable: true
+          type: string
+      type: object
+    SpendDuration:
+      description: |2
+
+            Spend limit refresh frequency
+            - MONTHLY: The spend limit refreshes every month
+            - QUARTERLY: The spend limit refreshes every quarter
+            - YEARLY: The spend limit refreshes every year
+            - ONE_TIME: The limit does not refresh
+      enum:
+      - MONTHLY
+      - QUARTERLY
+      - YEARLY
+      - ONE_TIME
+      type: string
+    TerminateCardRequest:
+      description: Parameters for terminating a card.
+      example:
+        reason: null
+        description: description
+      properties:
+        description:
+          description: Description for terminating a card
+          nullable: true
+          type: string
+        reason:
+          $ref: '#/components/schemas/ChangeCardReason'
+      required:
+      - reason
+      type: object
+    ThreeDomainSecureEnabledPreference:
+      description: "\nWhether to enable 3-D secure protocol on this card. \n"
+      enum:
+      - THREE_DOMAIN_SECURE_ENABLED
+      - THREE_DOMAIN_SECURE_DISABLED
+      type: string
+    TitleResponse:
+      example:
+        name: name
+        id: id
+      properties:
+        id:
+          type: string
+        name:
+          description: Name of the title
+          type: string
+      required:
+      - id
+      - name
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    UpdateCardRequest:
+      example:
+        metadata:
+          key: metadata
+        spend_controls: null
+      properties:
+        spend_controls:
+          $ref: '#/components/schemas/UpdateCardRequest_spend_controls'
+        metadata:
+          additionalProperties:
+            type: string
+          description: "\nSet of key value pairs associated with this object. Please\
+            \ do not store any personally identifiable or sensitive information here.\n\
+            Limitations: maximum of 50 keys, keys cannot exceed 40 characters, values\
+            \ cannot exceed 500 characters. \n"
+          nullable: true
+          type: object
+      type: object
+    UpdateUserRequest:
+      example:
+        metadata:
+          key: metadata
+        manager_id: manager_id
+        department_id: department_id
+        title_id: title_id
+        location_id: location_id
+        status: ""
+      properties:
+        status:
+          allOf:
+          - $ref: '#/components/schemas/UpdateUserStatus'
+          - nullable: true
+        manager_id:
+          description: The user id of the manager of this user
+          nullable: true
+          type: string
+        department_id:
+          nullable: true
+          type: string
+        location_id:
+          nullable: true
+          type: string
+        title_id:
+          nullable: true
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          description: "The metadata or customized attributes of the user. Maximum\
+            \ number of entries: 100"
+          nullable: true
+          type: object
+      type: object
+    UpdateUserStatus:
+      description: |2
+
+        Acceptable user status for update. To suspend a user, set status to 'disabled'. To unsuspend a user, set status to 'active'.
+      enum:
+      - ACTIVE
+      - DISABLED
+      type: string
+    UserLimitResponse:
+      example:
+        monthly_limit: null
+        monthly_available: null
+      properties:
+        monthly_limit:
+          $ref: '#/components/schemas/SetUserLimitRequest_monthly_limit'
+        monthly_available:
+          $ref: '#/components/schemas/SetUserLimitRequest_monthly_limit'
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    UserOwner:
+      allOf:
+      - $ref: '#/components/schemas/CardOwner'
+      - $ref: '#/components/schemas/UserOwner_allOf'
+    UserResponse:
+      example:
+        metadata:
+          key: metadata
+        manager_id: manager_id
+        department_id: department_id
+        title_id: title_id
+        remote_display_id: remote_display_id
+        last_name: last_name
+        id: id
+        first_name: first_name
+        email: email
+        location_id: location_id
+        status: ""
+      properties:
+        id:
+          type: string
+        first_name:
+          description: First name of the user
+          type: string
+        last_name:
+          description: Last name of the user
+          type: string
+        email:
+          description: Email address of the user
+          type: string
+        status:
+          allOf:
+          - $ref: '#/components/schemas/UserStatus'
+          - nullable: true
+        manager_id:
+          description: The user id of the manager of this user
+          nullable: true
+          type: string
+        department_id:
+          nullable: true
+          type: string
+        location_id:
+          nullable: true
+          type: string
+        title_id:
+          nullable: true
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          description: "The metadata or customized attributes of the user. Maximum\
+            \ number of entries: 100"
+          nullable: true
+          type: object
+        remote_display_id:
+          description: "Identifier that is displayed on the IDP or HR system, eg,\
+            \ if OKTA identifies you as user xyz"
+          nullable: true
+          type: string
+      required:
+      - email
+      - first_name
+      - id
+      - last_name
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    UserStatus:
+      description: Status of the user
+      enum:
+      - INVITED
+      - ACTIVE
+      - CLOSED
+      - DISABLED
+      - DELETED
+      - PENDING_ACTIVATION
+      - INACTIVE
+      type: string
+    konfig-generated-schema-single-parameter-schema-get--v2-cards:
+      properties:
+        user_id:
+          nullable: true
+          type: string
+        cursor:
+          nullable: true
+          type: string
+        limit:
+          format: int32
+          nullable: true
+          type: integer
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - user_id
+      - cursor
+      - limit
+    konfig-generated-schema-single-parameter-schema-post--v2-cards:
+      properties:
+        Idempotency-Key:
+          type: string
+        owner:
+          $ref: '#/components/schemas/CardOwner'
+        card_name:
+          minLength: 1
+          type: string
+        card_type:
+          $ref: '#/components/schemas/CardType'
+        limit_type:
+          $ref: '#/components/schemas/LimitType'
+        spend_controls:
+          allOf:
+          - $ref: '#/components/schemas/SpendControlRequest'
+          - nullable: true
+        mailing_address:
+          allOf:
+          - $ref: '#/components/schemas/Address'
+          - nullable: true
+        metadata:
+          additionalProperties:
+            type: string
+          description: "\nSet of key value pairs associated with this object. Please\
+            \ do not store any personally identifiable or sensitive information here.\n\
+            Limitations: maximum of 50 keys, keys cannot exceed 40 characters, values\
+            \ cannot exceed 500 characters. \n"
+          nullable: true
+          type: object
+        card_attribute_preferences:
+          allOf:
+          - $ref: '#/components/schemas/CardAttributePreferences'
+          - nullable: true
+      required:
+      - Idempotency-Key
+      - card_name
+      - card_type
+      - limit_type
+      - owner
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - Idempotency-Key
+    konfig-generated-schema-single-parameter-schema-get--v2-cards-id:
+      properties:
+        id:
+          type: string
+      required:
+      - id
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - id
+    konfig-generated-schema-single-parameter-schema-put--v2-cards-id:
+      properties:
+        id:
+          type: string
+        Idempotency-Key:
+          nullable: true
+          type: string
+        spend_controls:
+          allOf:
+          - $ref: '#/components/schemas/SpendControlUpdateRequest'
+          - nullable: true
+        metadata:
+          additionalProperties:
+            type: string
+          description: "\nSet of key value pairs associated with this object. Please\
+            \ do not store any personally identifiable or sensitive information here.\n\
+            Limitations: maximum of 50 keys, keys cannot exceed 40 characters, values\
+            \ cannot exceed 500 characters. \n"
+          nullable: true
+          type: object
+      required:
+      - id
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - id
+      - Idempotency-Key
+    konfig-generated-schema-single-parameter-schema-post--v2-cards-id-lock:
+      properties:
+        id:
+          type: string
+        Idempotency-Key:
+          nullable: true
+          type: string
+        description:
+          description: Description for locking a card
+          nullable: true
+          type: string
+        reason:
+          $ref: '#/components/schemas/ChangeCardReason'
+      required:
+      - id
+      - reason
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - id
+      - Idempotency-Key
+    konfig-generated-schema-single-parameter-schema-get--v2-cards-id-pan:
+      properties:
+        id:
+          type: string
+      required:
+      - id
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - id
+    konfig-generated-schema-single-parameter-schema-post--v2-cards-id-secure_email:
+      properties:
+        id:
+          type: string
+        Idempotency-Key:
+          type: string
+        recipient_email:
+          description: Email address to send card details to
+          type: string
+        sender_name:
+          description: Sender name. Shows up in the subject of the email
+          type: string
+        message:
+          description: Message to send with the card details
+          nullable: true
+          type: string
+        expiry_days:
+          description: Link expiry in number of days. Defaults to 30
+          format: int32
+          maximum: 30
+          nullable: true
+          type: integer
+      required:
+      - Idempotency-Key
+      - id
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - id
+      - Idempotency-Key
+    konfig-generated-schema-single-parameter-schema-post--v2-cards-id-terminate:
+      properties:
+        id:
+          type: string
+        Idempotency-Key:
+          nullable: true
+          type: string
+        description:
+          description: Description for terminating a card
+          nullable: true
+          type: string
+        reason:
+          $ref: '#/components/schemas/ChangeCardReason'
+      required:
+      - id
+      - reason
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - id
+      - Idempotency-Key
+    konfig-generated-schema-single-parameter-schema-post--v2-cards-id-unlock:
+      properties:
+        Idempotency-Key:
+          nullable: true
+          type: string
+        id:
+          type: string
+      required:
+      - id
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - Idempotency-Key
+      - id
+    konfig-generated-schema-single-parameter-schema-get--v2-company:
+      properties: {}
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter: []
+    konfig-generated-schema-single-parameter-schema-get--v2-departments:
+      properties:
+        cursor:
+          nullable: true
+          type: string
+        limit:
+          format: int32
+          nullable: true
+          type: integer
+        name:
+          nullable: true
+          type: string
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - cursor
+      - limit
+      - name
+    konfig-generated-schema-single-parameter-schema-post--v2-departments:
+      properties:
+        Idempotency-Key:
+          nullable: true
+          type: string
+        description:
+          description: Description of the department
+          nullable: true
+          type: string
+        name:
+          description: Name of the department
+          minLength: 1
+          type: string
+      required:
+      - name
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - Idempotency-Key
+    konfig-generated-schema-single-parameter-schema-get--v2-departments-id:
+      properties:
+        id:
+          type: string
+      required:
+      - id
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - id
+    konfig-generated-schema-single-parameter-schema-get--v2-locations:
+      properties:
+        cursor:
+          nullable: true
+          type: string
+        limit:
+          format: int32
+          nullable: true
+          type: integer
+        name:
+          nullable: true
+          type: string
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - cursor
+      - limit
+      - name
+    konfig-generated-schema-single-parameter-schema-post--v2-locations:
+      properties:
+        Idempotency-Key:
+          nullable: true
+          type: string
+        description:
+          description: Description of the location
+          nullable: true
+          type: string
+        name:
+          description: Name of the location
+          minLength: 1
+          type: string
+      required:
+      - name
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - Idempotency-Key
+    konfig-generated-schema-single-parameter-schema-get--v2-locations-id:
+      properties:
+        id:
+          type: string
+      required:
+      - id
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - id
+    konfig-generated-schema-single-parameter-schema-get--v2-titles:
+      properties:
+        cursor:
+          nullable: true
+          type: string
+        limit:
+          format: int32
+          nullable: true
+          type: integer
+        name:
+          nullable: true
+          type: string
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - cursor
+      - limit
+      - name
+    konfig-generated-schema-single-parameter-schema-post--v2-titles:
+      properties:
+        Idempotency-Key:
+          nullable: true
+          type: string
+        name:
+          description: Name of the title
+          minLength: 1
+          type: string
+      required:
+      - name
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - Idempotency-Key
+    konfig-generated-schema-single-parameter-schema-get--v2-titles-id:
+      properties:
+        id:
+          type: string
+      required:
+      - id
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - id
+    konfig-generated-schema-single-parameter-schema-get--v2-users:
+      properties:
+        cursor:
+          nullable: true
+          type: string
+        limit:
+          format: int32
+          nullable: true
+          type: integer
+        email:
+          description: Currently only support filtering by a single email or a single
+            remote_display_id.
+          nullable: true
+          type: string
+        remote_display_id:
+          description: Currently only support filtering by a single email or a single
+            remote_display_id.
+          nullable: true
+          type: string
+        expand[]:
+          description: |2
+
+            Expandable fields that can be included in the response by passing in a query parameter e.g. ?expand[]=limit
+          items:
+            type: string
+          nullable: true
+          type: array
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - cursor
+      - limit
+      - email
+      - remote_display_id
+      - "expand[]"
+    konfig-generated-schema-single-parameter-schema-post--v2-users:
+      properties:
+        Idempotency-Key:
+          nullable: true
+          type: string
+        first_name:
+          minLength: 1
+          type: string
+        last_name:
+          minLength: 1
+          type: string
+        email:
+          format: email
+          type: string
+        manager_id:
+          nullable: true
+          type: string
+        department_id:
+          nullable: true
+          type: string
+        location_id:
+          nullable: true
+          type: string
+        title_id:
+          nullable: true
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          description: "The metadata or customized attributes of the user. Maximum\
+            \ number of entries: 100"
+          nullable: true
+          type: object
+      required:
+      - email
+      - first_name
+      - last_name
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - Idempotency-Key
+    konfig-generated-schema-single-parameter-schema-get--v2-users-me:
+      properties: {}
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter: []
+    konfig-generated-schema-single-parameter-schema-get--v2-users-id:
+      properties:
+        id:
+          type: string
+      required:
+      - id
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - id
+    konfig-generated-schema-single-parameter-schema-put--v2-users-id:
+      properties:
+        id:
+          type: string
+        Idempotency-Key:
+          nullable: true
+          type: string
+        status:
+          allOf:
+          - $ref: '#/components/schemas/UpdateUserStatus'
+          - nullable: true
+        manager_id:
+          description: The user id of the manager of this user
+          nullable: true
+          type: string
+        department_id:
+          nullable: true
+          type: string
+        location_id:
+          nullable: true
+          type: string
+        title_id:
+          nullable: true
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          description: "The metadata or customized attributes of the user. Maximum\
+            \ number of entries: 100"
+          nullable: true
+          type: object
+      required:
+      - id
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - id
+      - Idempotency-Key
+    konfig-generated-schema-single-parameter-schema-get--v2-users-id-limit:
+      properties:
+        id:
+          type: string
+      required:
+      - id
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - id
+    konfig-generated-schema-single-parameter-schema-post--v2-users-id-limit:
+      properties:
+        id:
+          type: string
+        Idempotency-Key:
+          nullable: true
+          type: string
+        monthly_limit:
+          allOf:
+          - $ref: '#/components/schemas/Money'
+          - nullable: true
+      required:
+      - id
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - id
+      - Idempotency-Key
+    Card_spend_controls:
+      allOf:
+      - $ref: '#/components/schemas/SpendControl'
+      - nullable: true
+    Card_mailing_address:
+      allOf:
+      - $ref: '#/components/schemas/Address'
+      - nullable: true
+    CreateCardRequest_spend_controls:
+      allOf:
+      - $ref: '#/components/schemas/SpendControlRequest'
+      - nullable: true
+    CreateCardRequest_card_attribute_preferences:
+      allOf:
+      - $ref: '#/components/schemas/CardAttributePreferences'
+      - nullable: true
+    SetUserLimitRequest_monthly_limit:
+      allOf:
+      - $ref: '#/components/schemas/Money'
+      - nullable: true
+    UpdateCardRequest_spend_controls:
+      allOf:
+      - $ref: '#/components/schemas/SpendControlUpdateRequest'
+      - nullable: true
+    UserOwner_allOf:
+      properties:
+        type:
+          $ref: '#/components/schemas/OwnerType'
+        user_id:
+          type: string
+      required:
+      - type
+      - user_id
+      type: object
+      example: null
+  securitySchemes:
+    OAuth2:
+      description: OAuth2 security scheme
+      flows:
+        authorizationCode:
+          authorizationUrl: https://accounts-api.brex.com/oauth2/default/v1/authorize
+          scopes:
+            openid: openid
+            offline_access: offline access
+            users.readonly: View user data
+            users: View and manage user data
+            locations.readonly: View location data
+            locations: View and manage location data
+            departments.readonly: View department data
+            departments: View and manage department data
+            titles: View and manage title data
+            titles.readonly: View title data
+            cards: View and manage card data
+            cards.readonly: View card data
+            cards.pan: View and Send card number data
+          tokenUrl: https://accounts-api.brex.com/oauth2/default/v1/token
+      type: oauth2
+      x-konfig-globally-required-security: true
+x-explorer-enabled: false
+
